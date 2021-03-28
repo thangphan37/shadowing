@@ -12,9 +12,9 @@ import {useRouter} from 'next/router'
 
 export default function Home({blogs}) {
   const router = useRouter()
-  const categories = React.useMemo(
+  const vocabularies = React.useMemo(
     () => [...new Set(blogs.flatMap((item) => item.vocabularies ?? []))],
-    [],
+    [blogs],
   )
 
   const [search, setSearch] = React.useState(() => {
@@ -30,9 +30,22 @@ export default function Home({blogs}) {
       return ''
     }
   })
+
   const [filteredBlogPosts, setFilteredBlogPosts] = React.useState(() =>
     search ? [] : blogs,
   )
+
+  function handleToggleSearch(text) {
+    let newSearch = search
+
+    if (newSearch.indexOf(text) !== -1) {
+      newSearch = newSearch.split(text).join('').trim()
+    } else {
+      newSearch += ` ${text}`
+    }
+
+    setSearch(newSearch.trim())
+  }
 
   function handleSearch(event) {
     setSearch(event.target.value)
@@ -51,19 +64,38 @@ export default function Home({blogs}) {
   }, [search])
 
   React.useEffect(() => {
-    const newFilteredBlogPosts = matchSorter(blogs, search, {
-      keys: [
-        {
-          key: 'title',
-          threshold: matchSorter.rankings.CONTAINS,
-          maxRanking: matchSorter.rankings.CONTAINS,
-        },
-        {
-          key: 'vocabularies',
-          threshold: matchSorter.rankings.CONTAINS,
-          maxRanking: matchSorter.rankings.CONTAINS,
-        },
-      ],
+    if (!search) {
+      setFilteredBlogPosts(blogs)
+      return
+    }
+
+    const blogList = []
+
+    search.split(' ').forEach((searchItem) => {
+      const list = matchSorter(blogs, searchItem, {
+        keys: [
+          {
+            key: 'title',
+            threshold: matchSorter.rankings.CONTAINS,
+            maxRanking: matchSorter.rankings.CONTAINS,
+          },
+          {
+            key: 'vocabularies',
+            threshold: matchSorter.rankings.CONTAINS,
+            maxRanking: matchSorter.rankings.CONTAINS,
+          },
+        ],
+      })
+      blogList.push(list)
+    })
+
+    const newFilteredBlogPosts = [
+      ...new Set(blogList.flatMap((li) => li)),
+    ].filter((post) => {
+      return blogList.reduce((acc, list) => {
+        const commonPost = list.find((listItem) => listItem === post)
+        return acc && commonPost
+      }, true)
     })
 
     setFilteredBlogPosts(newFilteredBlogPosts)
@@ -107,21 +139,32 @@ export default function Home({blogs}) {
               fontSize: '0.75em',
             }}
           >
-            {categories.map((ca, index) => {
+            {vocabularies.map((vocabulary, index) => {
+              const isSelected = search.includes(vocabulary)
+              const selectedStyles = {
+                background: '#4124d4',
+                color: 'white',
+              }
+              const unselectedStyles = {
+                background: 'white',
+                color: '#4124d4',
+              }
+
               return (
                 <button
-                  key={`category-item-${index}`}
-                  css={{
-                    background: 'white',
-                    border: 'solid 1px #d3d3d3',
-                    color: '#5935dc',
-                    borderRadius: 3,
-                    marginRight: 5,
-                    marginTop: 5,
-                  }}
-                  onClick={() => setSearch(ca)}
+                  key={`${vocabulary}`}
+                  css={[
+                    {
+                      border: 'solid 1px #d3d3d3',
+                      borderRadius: 3,
+                      marginRight: 5,
+                      marginTop: 5,
+                    },
+                    () => (isSelected ? selectedStyles : unselectedStyles),
+                  ]}
+                  onClick={() => handleToggleSearch(vocabulary)}
                 >
-                  {ca}
+                  {vocabulary}
                 </button>
               )
             })}
