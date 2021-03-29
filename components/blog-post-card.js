@@ -9,6 +9,8 @@ export function BlogPostCard({blog: {title, slug, description}}) {
   return (
     <div
       css={{
+        width: '320px',
+        margin: '30px',
         background: 'white',
         padding: '30px',
         position: 'relative',

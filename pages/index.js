@@ -7,15 +7,20 @@ import styles from '../styles/Home.module.css'
 import Layout from '../components/layout'
 import {getSortedBlogsData} from '../lib/blog'
 import {BlogPostCard} from '../components/blog-post-card'
-import {matchSorter} from 'match-sorter'
 import {useRouter} from 'next/router'
+import {matchSorter} from 'match-sorter'
+import {searchBlog} from '../utils/search'
+import * as mq from '../styles/media-queries'
 
 export default function Home({blogs}) {
   const router = useRouter()
-  const vocabularies = React.useMemo(
+  const inputRef = React.useRef()
+
+  const vocabulariesResult = React.useMemo(
     () => [...new Set(blogs.flatMap((item) => item.vocabularies ?? []))],
     [blogs],
   )
+  const [vocabularies, setVocabularies] = React.useState([])
 
   const [search, setSearch] = React.useState(() => {
     if (typeof window === 'undefined') {
@@ -31,25 +36,29 @@ export default function Home({blogs}) {
     }
   })
 
-  const [filteredBlogPosts, setFilteredBlogPosts] = React.useState(() =>
-    search ? [] : blogs,
-  )
+  const [filteredBlogPosts, setFilteredBlogPosts] = React.useState(blogs)
 
-  function handleToggleSearch(text) {
-    let newSearch = search
-
-    if (newSearch.indexOf(text) !== -1) {
-      newSearch = newSearch.split(text).join('').trim()
-    } else {
-      newSearch += ` ${text}`
-    }
-
-    setSearch(newSearch.trim())
+  function handleToggleSearch(vocabulary) {
+    setSearch((s) => {
+      if (s.indexOf(vocabulary) !== -1) {
+        return s.split(vocabulary).join('').trim()
+      } else {
+        return `${s} ${vocabulary}`.trim()
+      }
+    })
   }
 
   function handleSearch(event) {
     setSearch(event.target.value)
   }
+
+  React.useEffect(() => {
+    inputRef.current.focus()
+  }, [])
+
+  React.useEffect(() => {
+    setVocabularies(vocabulariesResult)
+  }, [])
 
   React.useEffect(() => {
     const newUrl = new URL(window.location)
@@ -69,37 +78,25 @@ export default function Home({blogs}) {
       return
     }
 
-    const blogList = []
+    const options = {
+      keys: [
+        {
+          key: 'title',
+          threshold: matchSorter.rankings.CONTAINS,
+          maxRanking: matchSorter.rankings.CONTAINS,
+        },
+        {
+          key: 'vocabularies',
+          threshold: matchSorter.rankings.CONTAINS,
+          maxRanking: matchSorter.rankings.CONTAINS,
+        },
+      ],
+    }
 
-    search.split(' ').forEach((searchItem) => {
-      const list = matchSorter(blogs, searchItem, {
-        keys: [
-          {
-            key: 'title',
-            threshold: matchSorter.rankings.CONTAINS,
-            maxRanking: matchSorter.rankings.CONTAINS,
-          },
-          {
-            key: 'vocabularies',
-            threshold: matchSorter.rankings.CONTAINS,
-            maxRanking: matchSorter.rankings.CONTAINS,
-          },
-        ],
-      })
-      blogList.push(list)
-    })
-
-    const newFilteredBlogPosts = [
-      ...new Set(blogList.flatMap((li) => li)),
-    ].filter((post) => {
-      return blogList.reduce((acc, list) => {
-        const commonPost = list.find((listItem) => listItem === post)
-        return acc && commonPost
-      }, true)
-    })
+    const newFilteredBlogPosts = searchBlog(blogs, search, options)
 
     setFilteredBlogPosts(newFilteredBlogPosts)
-  }, [search])
+  }, [search, blogs])
 
   return (
     <Layout
@@ -112,8 +109,15 @@ export default function Home({blogs}) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <div css={{maxWidth: '27.77rem', marginBottom: '1.5rem'}}>
+      <main
+        css={{
+          padding: '40px',
+          [mq.small]: {
+            padding: '20px',
+          },
+        }}
+      >
+        <div css={{maxWidth: '500px', margin: 'auto'}}>
           <form
             css={{
               marginBottom: 0,
@@ -121,8 +125,11 @@ export default function Home({blogs}) {
           >
             <input
               placeholder="Search Shadowing"
+              aria-label="Search Shadowing"
+              type="search"
               value={search}
               onChange={handleSearch}
+              ref={inputRef}
               css={{
                 width: '100%',
                 border: 'solid 1px #d3d3d3',
@@ -139,7 +146,7 @@ export default function Home({blogs}) {
               fontSize: '0.75em',
             }}
           >
-            {vocabularies.map((vocabulary, index) => {
+            {vocabularies.map((vocabulary) => {
               const isSelected = search.includes(vocabulary)
               const selectedStyles = {
                 background: '#4124d4',
@@ -172,9 +179,12 @@ export default function Home({blogs}) {
         </div>
         <div
           css={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 320px)',
-            gap: '3rem',
+            display: 'flex',
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+            margin: '0 auto',
+            maxWidth: '90vw',
+            width: '100%',
           }}
         >
           {filteredBlogPosts.map((blog) => (
