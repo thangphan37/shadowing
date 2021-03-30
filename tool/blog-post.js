@@ -4,16 +4,13 @@ const inquirer = require('inquirer')
 const mkdirp = require('mkdirp')
 const jsToYaml = require('json-to-pretty-yaml')
 const prettier = require('prettier')
+const {formatDate} = require('./format-date')
 
 require('dotenv').config({
   path: path.join(__dirname, '.env'),
 })
 
 const fromRoot = (...p) => path.join(__dirname, '..', ...p)
-
-const padLeft0 = (n) => n.toString().padStart(2, '0')
-const formatDate = (d) =>
-  `${d.getFullYear()}-${padLeft0(d.getMonth() + 1)}-${padLeft0(d.getDate())}`
 
 const listify = (a) =>
   a && a.trim().length
