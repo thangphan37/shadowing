@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "push": "node tool/commit-and-push.js",
     "build": "next build",
     "start": "next start"
   },
