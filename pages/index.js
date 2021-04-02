@@ -117,7 +117,7 @@ export default function Home({blogs}) {
           },
         }}
       >
-        <div css={{maxWidth: '500px', margin: 'auto'}}>
+        <div css={{maxWidth: '500px', margin: 'auto', position: 'relative'}}>
           <form
             css={{
               marginBottom: 0,
@@ -137,6 +137,17 @@ export default function Home({blogs}) {
                 padding: '5px 10px',
               }}
             />
+            <div
+              css={{
+                position: 'absolute',
+                right: '1em',
+                top: '10px',
+                fontSize: '0.8em',
+                color: '#7a7c7d',
+              }}
+            >
+              {filteredBlogPosts.length}
+            </div>
           </form>
           <div
             css={{
