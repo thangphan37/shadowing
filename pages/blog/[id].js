@@ -25,7 +25,7 @@ export default function Blog({
         <title>{title}</title>
       </Head>
       <audio
-        src={`/${title}/${title}.m4a`}
+        src={`/${title}/jp.m4a`}
         controls
         autoPlay
         css={{

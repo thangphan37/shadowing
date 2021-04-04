@@ -108,7 +108,6 @@ export default function Home({blogs}) {
         <title>Blog | Phan Cong Thang</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
-
       <main
         css={{
           padding: '40px',
