@@ -5,14 +5,34 @@ import {jsx} from '@emotion/react'
 import Image from 'next/image'
 import Head from 'next/head'
 import Markdown from 'react-markdown'
+import Layout from '../../components/layout'
+import {getAllBlogIds, getBlogData} from '../../lib/blog'
+import {Toggle, useToggle} from '../../components/toggle'
 import * as React from 'react'
 
-import {getAllBlogIds, getBlogData} from '../../lib/blog'
-import Layout from '../../components/layout'
+function Main({blog: {title, slug, content}}) {
+  const {lang, status} = useToggle()
 
-export default function Blog({
-  blog: {title, slug, bannerCredit, content, description},
-}) {
+  if (status === 'idle' || status === 'pending') {
+    return <p>Loading...</p>
+  }
+
+  return (
+    <>
+      <audio
+        src={`/${title}/${lang}.m4a`}
+        controls
+        autoPlay
+        css={{
+          marginBottom: '1.5em',
+        }}
+      />
+      <div dangerouslySetInnerHTML={{__html: content[lang]}} />
+    </>
+  )
+}
+
+export default function Blog({blog}) {
   return (
     <Layout
       css={{
@@ -22,17 +42,9 @@ export default function Blog({
       }}
     >
       <Head>
-        <title>{title}</title>
+        <title>{blog.title}</title>
       </Head>
-      <audio
-        src={`/${title}/jp.m4a`}
-        controls
-        autoPlay
-        css={{
-          marginBottom: '1.5em',
-        }}
-      />
-      <div dangerouslySetInnerHTML={{__html: content}} />
+      <Main blog={blog} />
     </Layout>
   )
 }
