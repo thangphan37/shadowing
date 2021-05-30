@@ -111,9 +111,9 @@ function Main({allBlogs}) {
         },
       }}
     >
-      <button onClick={toggle}>
+      {/* <button onClick={toggle}>
         {status === 'idle' || status === 'pending' ? 'Loading...' : lang}
-      </button>
+      </button> */}
       <div css={{maxWidth: '500px', margin: 'auto', position: 'relative'}}>
         <form
           css={{

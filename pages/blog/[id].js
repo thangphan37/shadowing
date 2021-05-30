@@ -10,12 +10,12 @@ import {getAllBlogIds, getBlogData} from '../../lib/blog'
 import {Toggle, useToggle} from '../../components/toggle'
 import * as React from 'react'
 
-function Main({blog: {title, slug, content}}) {
-  const {lang, status} = useToggle()
+function Main({blog: {title, slug, content}, lang = 'jp'}) {
+  // const {lang, status} = useToggle()
 
-  if (status === 'idle' || status === 'pending') {
-    return <p>Loading...</p>
-  }
+  // if (status === 'idle' || status === 'pending') {
+  //   return <p>Loading...</p>
+  // }
 
   return (
     <>
